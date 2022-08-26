@@ -8,10 +8,15 @@
 (in-package :main)
 
 ;; shared c library
+
 (load "curses.lisp")
 
-;; 
+;; attempt load macros before usage
+(load "test-macros.lisp")
 (load "test.lisp")
+
+(load "pieces.lisp")
+
 
 (test::setup)
 ;;(test::colors)

@@ -1,153 +1,13 @@
 
+(uiop:define-package :pieces
+    (:use :cl :cl-user))
+
 
 ;;(ql:quickload :uiop)
-
 (uiop:define-package :test
     (:use :cl))
 
 (in-package :test)
-
-
-
-(defmacro with-black( &rest body)
-  `(progn
-     (curses::attron (curses::color-pair 1))
-     ,@body
-     (curses::attroff (curses::color-pair 1))))
-
-
-(defmacro with-white( &rest body)
-  `(progn
-     (curses::attron (curses::color-pair 8))
-     ,@body
-     (curses::attroff (curses::color-pair 8))))
-
-
-(defmacro with-red( &rest body)
-  `(progn
-     (curses::attron (curses::color-pair 2))
-     ,@body
-     (curses::attroff (curses::color-pair 2))))
-
-
-(defmacro with-green( &rest body)
-  `(progn
-     (curses::attron (curses::color-pair 3))
-     ,@body
-     (curses::attroff (curses::color-pair 3))))
-
-
-(defmacro with-yellow( &rest body)
-  `(progn
-     (curses::attron (curses::color-pair 4))
-     ,@body
-     (curses::attroff (curses::color-pair 4))))
-
-(defmacro with-blue( &rest body)
-  `(progn
-     (curses::attron (curses::color-pair 5))
-     ,@body
-     (curses::attroff (curses::color-pair 5))))
-
-
-(defmacro with-magenta( &rest body)
-  `(progn
-     (curses::attron (curses::color-pair 6))
-     ,@body
-     (curses::attroff (curses::color-pair 6))))
-
-
-(defmacro with-cyan( &rest body)
-  `(progn
-     (curses::attron (curses::color-pair 7))
-     ,@body
-     (curses::attroff (curses::color-pair 7))))
-
-
-(defmacro draw-xy(x y)
-  `(curses::mvprintw ,y ,x " "))
-
-(defmacro screen-width()
-  '(curses::getmaxx window))
-
-(defmacro screen-height()
-  '(curses::getmaxy window))
-
-
-(defun half(x)
-  (floor (/ x 2)))
-
-
-(defmacro clear-screen ()
-  (let ((x (gensym))
-	(y (gensym))
-	(screen-width (gensym))
-	(screen-height (gensym)))
-    `(let
-	 ((,screen-width (+ -1 (screen-width)))
-	  (,screen-height (+ -1 (screen-height))))
-       (loop for ,x from 0 to ,screen-width do
-	     (loop for ,y from 0 to ,screen-height do
-		   (draw-xy ,x ,y))))))
-
-
-
-
-
-(defmacro border-around-screen()
-  (let ((x (gensym))
-	(y (gensym))
-	(screen-width (gensym))
-	(screen-height (gensym)))
-    `(let
-	 ((,screen-width  (+ -1 (screen-width)))
-	  (,screen-height (+ -1 (screen-height))))
-       (dolist (,y (list 0 ,screen-height))
-	 (loop for ,x from 0 to ,screen-width do
-	   (draw-xy ,x ,y)))
-       (dolist (,x (list 0 ,screen-width))
-	 (loop for ,y from 0 to ,screen-height do
-	   (draw-xy ,x ,y))))))
-
-
-
-
-
-;; ever decreasing border
-(defmacro decreasing-border-screen()
-  (let ((x (gensym))
-	(y (gensym))
-	(n (gensym))
-	(screen-width (gensym))
-	(screen-height (gensym)))
-    `(let
-	 ((,screen-width (half (+ -1 (screen-width))))
-	  (,screen-height (half (+ -1 (screen-height))))
-			  
-	  (,n 0))
-       (loop for n from 0 to (half ,screen-width) by 2 do
-	 
-	 (dolist (,y (list n (- (half ,screen-height) n)))
-	   (loop for ,x from n to (- (half ,screen-width) n) do
-	     (draw-xy ,x ,y)))
-	 (dolist (,x (list n (- ,screen-width n)))
-	   (loop for ,y from n to (- ,screen-height n) do
-	     (draw-xy ,x ,y)))))))
-
-
-(defmacro draw-box(mx my mwidth mheight)
-  (let ((width (gensym))
-	(height (gensym))
-	(x (gensym))
-	(y (gensym)))	       
-    `(loop for ,x from ,mx to (+ ,mx ,mwidth) do
-      (loop for ,y from ,my to (+ ,my ,mheight) do
-	(draw-xy ,x ,y)))))
-
-
-
-
-
 
 
 ;;-----------------------------------------------------------
@@ -428,278 +288,7 @@
     (draw-xy (+ 1 middle-x (* x 2)) (- middle-y y))))
 
 
-(defun transform(xs key val)
-  (cond
-    ((null xs) xs)
-    ((eq (car (car xs)) key)
-     (cons (list key val) (cdr xs)))
-    (t (cons (car xs)
-	     (transform (cdr xs) key val)))))
 
-
-
-
-(defun move-piece-to(x y piece)
-  (let ((points (car (cdr (assoc 'points piece)))))
-    (transform piece 'points
-	       (mapcar #'(lambda (pos)
-			   (destructuring-bind (x2 y2) pos
-			     (list (+ x x2) (+ y y2))))
-		       points))))
-
-
-(defun move-piece-left(piece)
-  (let ((points (car (cdr (assoc 'points piece)))))
-    (transform piece 'points  
-	       (mapcar #'(lambda (pos)
-			   (destructuring-bind (x2 y2) pos
-			     (list (- x2 1) y2)))
-		       points))))
-
-(defun move-piece-right(piece)
-  (let ((points (car (cdr (assoc 'points piece)))))
-    (transform piece 'points    
-	       (mapcar #'(lambda (pos)
-			   (destructuring-bind (x2 y2) pos
-			     (list (+ x2 1) y2)))
-		       points))))
-
-
-(defun move-piece-down(piece)
-  (let ((points (car (cdr (assoc 'points piece)))))
-    (transform piece 'points    
-	       (mapcar #'(lambda (pos)
-			   (destructuring-bind (x2 y2) pos
-			     (list x2 (- y2 1))))
-		       points))))
-
-
-
-
-(defun draw-piece(obj)
-  (let ((points (car (cdr (assoc 'points obj)))))
-    (dolist (point points)
-    (destructuring-bind (x y) point
-      (offset-draw x y)))))
-
-
-(defun make-piece-0()  `( (color blue) (id 0) (points  (0 0)    (0 1)    (1 1)    (1 0)  )))
-
-
-
-(defun draw-piece-0(x y)
-  (offset-draw (+ x 0) (+ y 0))
-  (offset-draw (+ x 0) (+ y 1))
-  (offset-draw (+ x 1) (+ y 1))
-  (offset-draw (+ x 1) (+ y 0))
-  )
-
-(defun make-piece-1()  `( (color blue) (id 1) (points  (0 2)    (0 1)    (1 1)    (1 0)  )))
-
-
-(defun draw-piece-1(x y)
-  (offset-draw (+ x 0) (+ y 2))
-  (offset-draw (+ x 0) (+ y 1))
-  (offset-draw (+ x 1) (+ y 1))
-  (offset-draw (+ x 1) (+ y 0)))
-
-
-(defun make-piece-2()  `( (color blue) (id 2) (points  (2 1)    (1 1)    (1 0)    (0 0)  )))
-
-(defun draw-piece-2(x y)
-  (offset-draw (+ x 2) (+ y 1))
-  (offset-draw (+ x 1) (+ y 1))
-  (offset-draw (+ x 1) (+ y 0))
-  (offset-draw (+ x 0) (+ y 0)))
-
-
-(defun make-piece-3()  `( (color blue) (id 3) (points  (1 2)    (0 1)    (1 1)    (0 0)  )))
-
-(defun draw-piece-3(x y)
-  (offset-draw (+ x 1) (+ y 2))
-  (offset-draw (+ x 0) (+ y 1))
-  (offset-draw (+ x 1) (+ y 1))
-  (offset-draw (+ x 0) (+ y 0)))
-
-
-(defun make-piece-4()  `( (color blue) (id 4) (points  (0 1)    (1 1)    (1 0)    (2 0)  )))
-
-(defun draw-piece-4(x y)
-  (offset-draw (+ x 0) (+ y 1))
-  (offset-draw (+ x 1) (+ y 1))
-  (offset-draw (+ x 1) (+ y 0))
-  (offset-draw (+ x 2) (+ y 0))
-  )
-
-(defun make-piece-5()  `( (color blue) (id 5) (points  (1 1)    (0 0)    (1 0)    (2 0)  )))
-
-(defun draw-piece-5(x y)
-  (offset-draw (+ x 1) (+ y 1))
-  (offset-draw (+ x 0) (+ y 0))
-  (offset-draw (+ x 1) (+ y 0))
-  (offset-draw (+ x 2) (+ y 0))
-  )
-
-(defun make-piece-6()  `( (color blue) (id 6) (points  (1 1)    (0 0)    (0 1)    (0 2)  )))
-
-(defun draw-piece-6(x y)
-  (offset-draw (+ x 1) (+ y 1))
-  (offset-draw (+ x 0) (+ y 0))
-  (offset-draw (+ x 0) (+ y 1))
-  (offset-draw (+ x 0) (+ y 2))
-  )
-
-
-(defun make-piece-7()  `( (color blue) (id 7) (points  (0 1)    (1 1)    (2 1)    (1 0)  )))
-
-(defun draw-piece-7(x y)
-  (offset-draw (+ x 0) (+ y 1))
-  (offset-draw (+ x 1) (+ y 1))
-  (offset-draw (+ x 2) (+ y 1))
-  (offset-draw (+ x 1) (+ y 0))
-  )
-
-
-(defun make-piece-8()  `( (color blue) (id 8) (points  (1 2)    (0 1)    (1 0)    (1 1)  )))
-
-(defun draw-piece-8(x y)
-  (offset-draw (+ x 1) (+ y 2))
-  (offset-draw (+ x 0) (+ y 1))
-  (offset-draw (+ x 1) (+ y 0))
-  (offset-draw (+ x 1) (+ y 1))
-  )
-
-;; ---------
-
-(defun make-piece-9()  `( (color blue) (id 9) (points  (0 0)    (1 0)    (2 0)    (3 0)  )))
-
-(defun draw-piece-9(x y)
-  (offset-draw (+ x 0) (+ y 0))
-  (offset-draw (+ x 1) (+ y 0))
-  (offset-draw (+ x 2) (+ y 0))
-  (offset-draw (+ x 3) (+ y 0))
-  )
-
-(defun make-piece-10()  `( (color blue) (id 10) (points  (0 0)    (0 1)    (0 2)    (0 3)  )))
-
-(defun draw-piece-10(x y)
-  (offset-draw (+ x 0) (+ y 0))
-  (offset-draw (+ x 0) (+ y 1))
-  (offset-draw (+ x 0) (+ y 2))
-  (offset-draw (+ x 0) (+ y 3))
-  )
-
-;; --------------
-
-(defun make-piece-11()  `( (color blue) (id 11) (points  (0 0)    (1 0)    (1 1)    (1 2)  )))
-
-(defun draw-piece-11(x y)
-  (offset-draw (+ x 0) (+ y 0))
-  (offset-draw (+ x 1) (+ y 0))
-  (offset-draw (+ x 1) (+ y 1))
-  (offset-draw (+ x 1) (+ y 2))
-  )
-
-
-(defun make-piece-12()  `( (color blue) (id 12) (points  (0 1)    (0 0)    (1 0)    (2 0)  )))
-
-(defun draw-piece-12(x y)
-  (offset-draw (+ x 0) (+ y 1))
-  (offset-draw (+ x 0) (+ y 0))
-  (offset-draw (+ x 1) (+ y 0))
-  (offset-draw (+ x 2) (+ y 0))
-  )
-
-
-(defun make-piece-13()  `( (color blue) (id 13) (points  (0 0)    (0 1)    (0 2)    (1 2)  )))
-
-(defun draw-piece-13(x y)
-  (offset-draw (+ x 0) (+ y 0))
-  (offset-draw (+ x 0) (+ y 1))
-  (offset-draw (+ x 0) (+ y 2))
-  (offset-draw (+ x 1) (+ y 2))
-  )
-
-
-(defun make-piece-14()  `( (color blue) (id 14) (points  (0 1)    (1 1)    (2 1)    (2 0)  )))
-
-(defun draw-piece-14(x y)
-  (offset-draw (+ x 0) (+ y 1))
-  (offset-draw (+ x 1) (+ y 1))
-  (offset-draw (+ x 2) (+ y 1))
-  (offset-draw (+ x 2) (+ y 0))
-  )
-
-
-;;--------------------------
-
-(defun make-piece-15()  `( (color blue) (id 15) (points  (0 0)    (0 1)    (0 2)    (1 0)  )))
-
-(defun draw-piece-15(x y)
-  (offset-draw (+ x 0) (+ y 0))
-  (offset-draw (+ x 0) (+ y 1))
-  (offset-draw (+ x 0) (+ y 2))
-  (offset-draw (+ x 1) (+ y 0))
-  )
-
-
-
-(defun make-piece-16()  `( (color blue) (id 16) (points  (0 0)    (0 1)    (1 1)    (2 1)  )))
-
-(defun draw-piece-16(x y)
-  (offset-draw (+ x 0) (+ y 0))
-  (offset-draw (+ x 0) (+ y 1))
-  (offset-draw (+ x 1) (+ y 1))
-  (offset-draw (+ x 2) (+ y 1))
-  )
-
-
-(defun make-piece-17()  `( (color blue) (id 17) (points  (0 2)    (1 2)    (1 1)    (1 0)  )))
-
-(defun draw-piece-17(x y)
-  (offset-draw (+ x 0) (+ y 2))
-  (offset-draw (+ x 1) (+ y 2))
-  (offset-draw (+ x 1) (+ y 1))
-  (offset-draw (+ x 1) (+ y 0))
-  )
-
-
-(defun make-piece-18()  `( (color blue) (id 18) (points  (0 0)    (1 0)    (2 0)    (2 1)  )))
-
-(defun draw-piece-18(x y)
-  (offset-draw (+ x 0) (+ y 0))
-  (offset-draw (+ x 1) (+ y 0))
-  (offset-draw (+ x 2) (+ y 0))
-  (offset-draw (+ x 2) (+ y 1))
-  )
-
-
-;; board is a collection of pieces
-;; what happens when line is removed ? is that piece 'broken'?
-;;
-;;
-;;
-;; single colour board
-;; is object even on the board ?
-;; may be dropped in from above 
-(defun consistent-p(obj board)
-  (catch 'nop
-    (let ((points (car (cdr (assoc 'points obj)))))      
-      (dolist (obj2 board)
-	(let ((points2 (car (cdr assoc 'points obj2))))
-	  (dolist (point points)
-	    (destructuring-bind (x y) point
-	      (when (< x 1) (throw 'nop nil))
-	      (when (> x 10)(throw 'nop nil))
-	      (when (< y 1) (throw 'nop nil))
-	      (when (> y 23) (throw 'nop nil))
-	      (when (member point points :test #'equalp) (throw 'nop nil)))))))
-    t))
-
-
-
-
-   
 
 (defun elapsed(tick tock)
   (- tock tick))
@@ -708,36 +297,176 @@
   (setq invalid t))
 
 
-(defun new-piece ()
-  (move-piece-to 5 20 (funcall (nth (random 19) (list
-						 #'make-piece-0
-						 #'make-piece-1
-						 #'make-piece-2
-						 #'make-piece-3
-						 #'make-piece-4
-						 #'make-piece-5
-						 #'make-piece-6
-						 #'make-piece-7
-						 #'make-piece-8
-						 #'make-piece-9
-						 #'make-piece-10
-						 #'make-piece-11
-						 #'make-piece-12
-						 #'make-piece-13
-						 #'make-piece-14
-						 #'make-piece-15
-						 #'make-piece-16
-						 #'make-piece-17
-						 #'make-piece-18)))))
+(defun offset-with-color(color x y)
+  (cond
+    ((eq color 'pieces::red)
+     (with-red (offset-draw x y)))
+    ((eq color 'pieces::blue)
+     (with-blue (offset-draw x y)))
+    ((eq color 'pieces::green)
+     (with-green (offset-draw x y)))
+    (t
+     (offset-draw x y))))
 
-					
+
+
+
+
+(defun find-offset(obj)
+  (let ((id (car (cdr (assoc 'pieces::id obj)))))
+    
+    t))
+
+(defun rotate-anticlockwise(obj)
+  (let ((id (car (cdr (assoc 'pieces::id obj))))
+	(xy (car (cdr (assoc 'pieces::xy obj))))
+	(color (car (cdr (assoc 'pieces::color obj)))))
+    (destructuring-bind (x y) xy
+      (curses::mvprintw 1 0 (format nil "xy = ~A ~%" xy))
+      (curses::mvprintw 2 0 (format nil "id = ~A ~%" id))
+      (curses::mvprintw 3 0 (format nil "color = ~A ~%" color))
+      (curses::mvprintw 4 0 (format nil "id int? = ~A ~%" (integerp id)))
+
+      (pieces::transform 
+       (pieces::move-piece-to x y (funcall (nth id (list
+					    #'pieces::make-piece-0
+					    #'pieces::make-piece-2
+					    #'pieces::make-piece-1
+					    
+					    #'pieces::make-piece-4
+					    #'pieces::make-piece-3
+					    
+					    #'pieces::make-piece-8
+					    #'pieces::make-piece-5
+					    #'pieces::make-piece-6
+					    #'pieces::make-piece-7
+					    
+					    #'pieces::make-piece-10
+					    #'pieces::make-piece-9
+					    
+					    #'pieces::make-piece-14
+					    #'pieces::make-piece-11
+					    #'pieces::make-piece-12
+					    #'pieces::make-piece-13
+					    
+					    #'pieces::make-piece-18
+					    #'pieces::make-piece-15
+					    #'pieces::make-piece-16
+					    #'pieces::make-piece-17))))
+       'pieces::color
+       color))))
+
+
+(defun rotate-clockwise(obj)
+  (let ((id (car (cdr (assoc 'pieces::id obj))))
+	(xy (car (cdr (assoc 'pieces::xy obj))))
+	(color (car (cdr (assoc 'pieces::color obj)))))
+    (destructuring-bind (x y) xy
+      (curses::mvprintw 1 0 (format nil "xy = ~A ~%" xy))
+      (curses::mvprintw 2 0 (format nil "id = ~A ~%" id))
+      (curses::mvprintw 3 0 (format nil "color = ~A ~%" color))
+      (curses::mvprintw 4 0 (format nil "id int? = ~A ~%" (integerp id)))
+
+      (pieces::transform 
+       (pieces::move-piece-to x y (funcall (nth id (list
+					    #'pieces::make-piece-0
+					    #'pieces::make-piece-2
+					    #'pieces::make-piece-1
+					    
+					    #'pieces::make-piece-4
+					    #'pieces::make-piece-3
+					    
+					    #'pieces::make-piece-6
+					    #'pieces::make-piece-7
+					    #'pieces::make-piece-8
+					    #'pieces::make-piece-5
+					    
+					    #'pieces::make-piece-10
+					    #'pieces::make-piece-9
+					    
+					    #'pieces::make-piece-12
+					    #'pieces::make-piece-13
+					    #'pieces::make-piece-14
+					    #'pieces::make-piece-11
+					    
+					    #'pieces::make-piece-16
+					    #'pieces::make-piece-17
+					    #'pieces::make-piece-18
+					    #'pieces::make-piece-15))))
+       'pieces::color
+       color))))
+
+
+(defun points-without-row(row points)
+  (cond
+    ((null points) nil)
+    (t (let ((point (car points)))
+	 (destructuring-bind (x y) point
+	   (if (= row y)
+	       (points-without-row row (cdr points))
+	       (cons point (points-without-row row (cdr points)))))))))
+
+
+(defun points-above-row-descend(row points)
+  (cond
+    ((null points) nil)
+    (t (let ((point (car points)))
+	 (destructuring-bind (x y) point
+	   (if (> y row)
+	       (cons (list x (- y 1)) (points-above-row-descend row (cdr points)))
+	       (cons point (points-above-row-descend row (cdr points)))))))))
+
+
+;; board is a list of pieces
+;; func acts on pieces
+(defun remove-full-row(row piece)
+  (let ((points (car (cdr (assoc 'pieces::points piece)))))
+    (pieces::transform piece 'pieces::points 
+		       (points-above-row-descend row (points-without-row row points)))))
+
+
+
+
+
+(defun full-row-remove(board)
+  (catch 'found-row
+    (let ((all-points (apply #'append (mapcar (lambda (x) (car (cdr (assoc 'pieces::points x)))) board)))
+	  (point-count (make-array 30)))
+      (dolist (point all-points)
+	(destructuring-bind (x y) point
+	  (incf (aref point-count y))))
+      (loop for y from 1 to 20 do
+	(when (= (aref point-count y) 10)
+	  ;;(throw 'found-row (full-row-p (remove-board-row y board)))
+	  (throw 'found-row (mapcar (lambda (piece) (remove-full-row y piece)) board)))))
+    board))
+      
+
+
+
+
+(defun full-row-p(board)
+  (catch 'found-row
+    (let ((all-points (apply #'append (mapcar (lambda (x) (car (cdr (assoc 'pieces::points x)))) board)))
+	  (point-count (make-array 30)))
+      (dolist (point all-points)
+	(destructuring-bind (x y) point
+	  (incf (aref point-count y))))
+      (loop for y from 1 to 20 do
+	(when (= (aref point-count y) 10)
+	  (throw 'found-row t))))
+    nil))
+
+      
+    
+
 
 ;; down-count is how long to wait when a piece is stuck before recognising as such and generating new piece
 ;; single box moving along with tick of clock
 ;; piece is 0
 (defun new-game()
   (setq board '())
-  (setq obj (new-piece))
+  (setq obj (pieces::new-piece))
   
   (setq tick (get-internal-real-time))
   (setq tock 0)
@@ -756,19 +485,35 @@
        
        (with-black
 	   (loop for y from 0 to 60  do
-	     (curses::mvprintw y 20 "                                                                                                                                   ")))
+	     (curses::mvprintw y 20 "                                                                                                                                                                    ")))
        
        (with-white
 	   (loop for y from 1 to 20 do
 	     (loop for x from 1 to 10 do
 	       (offset-draw x y))))
+       
 
-       (with-red
-	   (dolist (coord board)
-	     (destructuring-bind (x y) coord
-	       (offset-draw x y))))
+       
+       
+       
+       ;; draw pieces we know about
+       (dolist (piece board)
+	 ;;(curses::mvprintw 1 0 (format nil "sanity.piece = ~A ~%" piece))
+	 ;;(curses::mvprintw 2 0 (format nil "sanity.ppoints = ~A ~%" (assoc 'pieces::points piece)))
+	 (let ((color (car (cdr (assoc 'pieces::color piece)))))
+	   ;;(curses::mvprintw 2 0 (format nil "sanity.color = ~A ~%" color))
+	 
+	   (let ((points (car (cdr (assoc 'pieces::points piece)))))
+	     ;;(curses::mvprintw 0 0 (format nil "sanity.points = ~A ~%" points))
+	     (dolist (point points)
+	       (destructuring-bind (x y) point
+		 (offset-with-color color x y))))))
+       
 
-       (draw-piece obj)
+       ;;(curses::attron curses::A-STANDOUT)
+       (pieces::draw-piece obj)
+       ;;(curses::attroff curses::a-standout)
+       
        
        ;; (cond
        ;; 	 ((= piece 0) (with-blue  (draw-piece obj)))
@@ -793,32 +538,35 @@
        ;; 	 (t nil))
 
 
-       (with-blue  (draw-piece-0 30 pos-y))
-       (with-blue  (draw-piece-1 35 pos-y))
-       (with-blue  (draw-piece-2 40 pos-y))
-       (with-blue  (draw-piece-3 45 pos-y))
-       (with-blue  (draw-piece-4 50 pos-y))
-       (with-blue  (draw-piece-5 30 (- pos-y 5)))
-       (with-blue  (draw-piece-6 35 (- pos-y 5)))
-       (with-blue  (draw-piece-7 40 (- pos-y 5)))
-       (with-blue  (draw-piece-8 45 (- pos-y 5)))
+       (with-blue  (pieces::draw-piece-0 (+ pos-x 30) pos-y))
+       (with-blue  (pieces::draw-piece-1 (+ pos-x 35) pos-y))
+       (with-blue  (pieces::draw-piece-2 (+ pos-x 40) pos-y))
+       (with-blue  (pieces::draw-piece-3 (+ pos-x 45) pos-y))
+       (with-blue  (pieces::draw-piece-4 (+ pos-x 50) pos-y))
+       (with-blue  (pieces::draw-piece-5 (+ pos-x 30) (- pos-y 5)))
+       (with-blue  (pieces::draw-piece-6 (+ pos-x 35) (- pos-y 5)))
+       (with-blue  (pieces::draw-piece-7 (+ pos-x 40) (- pos-y 5)))
+       (with-blue  (pieces::draw-piece-8 (+ pos-x 45) (- pos-y 5)))
 	 
-       (with-blue  (draw-piece-9 30 (- pos-y 10)))
-       (with-blue  (draw-piece-10 35 (- pos-y 10)))
+       (with-blue  (pieces::draw-piece-9 (+ pos-x 30) (- pos-y 10)))
+       (with-blue  (pieces::draw-piece-10 (+ pos-x 35) (- pos-y 10)))
 
-       (with-blue  (draw-piece-11 30 (- pos-y 15)))
-       (with-blue  (draw-piece-12 35 (- pos-y 15)))
-       (with-blue  (draw-piece-13 40 (- pos-y 15)))
-       (with-blue  (draw-piece-14 45 (- pos-y 15)))
+       (with-blue  (pieces::draw-piece-11 (+ pos-x 30) (- pos-y 15)))
+       (with-blue  (pieces::draw-piece-12 (+ pos-x 35) (- pos-y 15)))
+       (with-blue  (pieces::draw-piece-13 (+ pos-x 40) (- pos-y 15)))
+       (with-blue  (pieces::draw-piece-14 (+ pos-x 45) (- pos-y 15)))
        
-       (with-blue  (draw-piece-15 30 (- pos-y 20)))
-       (with-blue  (draw-piece-16 35 (- pos-y 20)))
-       (with-blue  (draw-piece-17 40 (- pos-y 20)))
-       (with-blue  (draw-piece-18 45 (- pos-y 20)))
+       (with-blue  (pieces::draw-piece-15 (+ pos-x 30) (- pos-y 20)))
+       (with-blue  (pieces::draw-piece-16 (+ pos-x 35) (- pos-y 20)))
+       (with-blue  (pieces::draw-piece-17 (+ pos-x 40) (- pos-y 20)))
+       (with-blue  (pieces::draw-piece-18 (+ pos-x 45) (- pos-y 20)))
        
+
        
        (curses::refresh)
        (curses::mvprintw 5 0 (format nil "piece is ~a ~%" piece))
+       ;;(curses::mvprintw 6 0 (format nil "board is ~a ~%" board))
+       
       );;when invalid
        
 
@@ -829,8 +577,8 @@
      
      (when (= ch (char-code #\a)) ;; left
 
-       (when (consistent-p (move-piece-left obj) board)
-	 (setq obj (move-piece-left obj)))
+       (when (pieces::consistent-p (pieces::move-piece-left obj) board)
+	 (setq obj (pieces::move-piece-left obj)))
        
        (setq pos-x (- pos-x 1))
        (invalidate)
@@ -839,78 +587,31 @@
 
      ;; turn piece anti-clockwise .....
      (when (= ch (char-code #\w))
-       (cond
-	 ((= piece 1) (setq piece 2))
-	 ((= piece 2) (setq piece 1))
-	 
-	 ((= piece 3) (setq piece 4))
-	 ((= piece 4) (setq piece 3))
 
-	 ((= piece 5) (setq piece 8))
-	 ((= piece 6) (setq piece 5))
-	 ((= piece 7) (setq piece 6))
-	 ((= piece 8) (setq piece 7))
-
-	 ((= piece 9) (setq piece 10))
-	 ((= piece 10) (setq piece 9))
-	 
-	 ((= piece 11) (setq piece 14))
-	 ((= piece 12) (setq piece 11))
-	 ((= piece 13) (setq piece 12))
-	 ((= piece 14) (setq piece 13))
-
-	 ((= piece 15) (setq piece 18))
-	 ((= piece 16) (setq piece 15))
-	 ((= piece 17) (setq piece 16))
-	 ((= piece 18) (setq piece 17))
-	 
-	 
-	 (t nil))
-       (invalidate)
+       (let ((rot (rotate-anticlockwise obj)))
+	 (when (pieces::consistent-p rot board)
+	   (setq obj rot)
+	   (invalidate)))
 
        )
+     
 
      
      ;; turn piece clockwise .......
      (when (= ch (char-code #\e))
-       (cond
-	 ((= piece 1) (setq piece 2))
-	 ((= piece 2) (setq piece 1))
-	 ((= piece 3) (setq piece 4))
-	 ((= piece 4) (setq piece 3))
-	 
-	 ((= piece 5) (setq piece 6))
-	 ((= piece 6) (setq piece 7))
-	 ((= piece 7) (setq piece 8))
-	 ((= piece 8) (setq piece 5))
-
-	 ((= piece 9) (setq piece 10))
-	 ((= piece 10) (setq piece 9))
-
-	 ((= piece 11) (setq piece 12))
-	 ((= piece 12) (setq piece 13))
-	 ((= piece 13) (setq piece 14))
-	 ((= piece 14) (setq piece 11))
-
-	 ((= piece 15) (setq piece 16))
-	 ((= piece 16) (setq piece 17))
-	 ((= piece 17) (setq piece 18))
-	 ((= piece 18) (setq piece 15))
-	 
-	 
-	 (t nil))
-       (invalidate)
-
+       (let ((rot (rotate-clockwise obj)))
+	 (when (pieces::consistent-p rot board)
+	   (setq obj rot)
+	   (invalidate)))
        )
-
 
      
      (when (= ch (char-code #\s))  ;; down
 
        
-       (when (consistent-p (move-piece-down obj) board)
+       (when (pieces::consistent-p (pieces::move-piece-down obj) board)
 	 (setq down-count 2)
-	 (setq obj (move-piece-down obj)))
+	 (setq obj (pieces::move-piece-down obj)))
        
        (setq pos-y (- pos-y 1))
        (invalidate)
@@ -919,8 +620,8 @@
 
      (when (= ch (char-code #\d))  ;; right
        
-       (when (consistent-p (move-piece-right obj) board)
-	 (setq obj (move-piece-right obj)))
+       (when (pieces::consistent-p (pieces::move-piece-right obj) board)
+	 (setq obj (pieces::move-piece-right obj)))
 
        (setq pos-x (+ pos-x 1))
        (invalidate)
@@ -948,26 +649,32 @@
 		
        ;;drop it down one level
        
-       (when (consistent-p (move-piece-down obj) board)
+       (when (pieces::consistent-p (pieces::move-piece-down obj) board)
 	 (setq down-count 2)
-	 (setq obj (move-piece-down obj)))
+	 (setq obj (pieces::move-piece-down obj)))
 
-       (if (not (consistent-p (move-piece-down obj) board))
+       (if (not (pieces::consistent-p (pieces::move-piece-down obj) board))
 	   (decf down-count))
 
        (when (zerop down-count)
 	 ;; fix piece here -- and next piece
 	 (setq board (cons obj board))
+	 ;; --- check for full rows ---
+
+	 (when (full-row-p board))
+	 (curses::mvprintw 1 0 (format nil "full row ~%"))
+	 (setq board (full-row-remove board))
+	   
 	 ;; next piece
-	 (setq obj (new-piece))
+	 (setq obj (pieces::new-piece))
+	 (setq pos-x 5)
+	 (setq pos-y 20)
 
 	 
-	 )
-	   
+	 )	   
        
        (setq pos-y (- pos-y 1))
        
-
        (invalidate)
 
        ;; reset clock
@@ -984,6 +691,9 @@
    (go top)
    quit
      ))
+
+
+
 
 
   

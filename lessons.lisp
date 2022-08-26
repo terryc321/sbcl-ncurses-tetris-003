@@ -1,4 +1,9 @@
 
+
+
+
+;;----------------------- above broken code from old test.lisp ----------
+
 (with-cyan 
       (loop for y from 0 to 21 do
 	    (loop for x from 0 to 11 do

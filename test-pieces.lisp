@@ -72,7 +72,28 @@
 
 
 (fiveam:test move1 (fiveam:is (equalp  `( (color blue) (id 18) (points ( (0 0)    (1 0)    (2 0)    (2 1)  )))
-				       (pieces::make-piece-18))))
+				       (move-piece-to 0 0 (pieces::make-piece-18)))))
+
+
+(fiveam:test move2 (fiveam:is (equalp  `( (color blue) (id 18) (points ( (1 1)    (2 1)    (3 1)    (3 2)  )))
+				       (move-piece-to 1 1 (pieces::make-piece-18)))))
+
+(fiveam:test move3 (fiveam:is (equalp  `( (color blue) (id 18) (points ( (-1 0)    (0 0)    (1 0)    (1 1)  )))
+				       (move-piece-left (pieces::make-piece-18)))))
+
+
+(fiveam:test move4 (fiveam:is (equalp  `( (color blue) (id 18) (points ( (1 0)    (2 0)    (3 0)    (3 1)  )))
+				       (move-piece-right (pieces::make-piece-18)))))
+
+
+(fiveam:test move5 (fiveam:is (equalp  `( (color blue) (id 18) (points ( (0 -1)    (1 -1)    (2 -1)    (2 0)  )))
+				       (move-piece-down (pieces::make-piece-18)))))
+
+
+;; how test consistent ?
+;; (fiveam:test consistent1 (fiveam:is (equalp  `( (color blue) (id 18) (points ( (0 -1)    (1 -1)    (2 -1)    (2 0)  )))
+;; 				       (move-piece-down (pieces::make-piece-18)))))
+
 
 
 
