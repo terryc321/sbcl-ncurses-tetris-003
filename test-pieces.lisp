@@ -1,7 +1,7 @@
 
 (ql:quickload :fiveam)
 
-(uiop:define-package :test-pieces
+(defpackage :test-pieces
     (:use :cl :cl-user :fiveam :pieces))
 
 

@@ -2,7 +2,7 @@
 
 ;;(quicklisp:quickload :uiop)
 
-(uiop:define-package :main
+(defpackage :main
     (:use :cl))
 
 (in-package :main)

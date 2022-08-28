@@ -11,7 +11,8 @@
 
 (in-package "CURSES")
 
-(load-shared-object "/home/terry/balthazar/curses/clib/libfix.so")
+
+(load-shared-object "/home/terry/balthazar/sbcl-ncurses-tetris-003//clib/libfix.so")
 
 ;; sanity check - runs a c program prints stuff on the console terminal and waits for key press
 (define-alien-routine demo void)

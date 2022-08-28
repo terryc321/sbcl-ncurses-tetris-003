@@ -1,6 +1,6 @@
 
 
-(uiop:define-package :clock
+(defpackage :clock
     (:use :cl))
 
 (in-package :clock)

@@ -1,7 +1,7 @@
 
 
 ;;(quicklisp:quickload :uiop)
-(uiop:define-package :tetris
+(defpackage :tetris
     (:use :cl))
 (in-package :tetris)
 

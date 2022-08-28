@@ -1,10 +1,10 @@
 
 
-(uiop:define-package :pieces
+(defpackage :pieces
     (:use :cl :cl-user))
 
 ;;(ql:quickload :uiop)
-(uiop:define-package :test
+(defpackage :test
     (:use :cl))
 
 (in-package :test)

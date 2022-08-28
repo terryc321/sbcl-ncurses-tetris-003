@@ -3,7 +3,7 @@
 (ql:quickload :fiveam)
 
 
-(uiop:define-package :test-tetris
+(defpackage :test-tetris
     (:use :cl :fiveam))
 
 (in-package :test-tetris)

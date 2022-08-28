@@ -1,10 +1,10 @@
 
-(uiop:define-package :pieces
+(defpackage :pieces
     (:use :cl :cl-user))
 
 
 ;;(ql:quickload :uiop)
-(uiop:define-package :test
+(defpackage :test
     (:use :cl))
 
 (in-package :test)
@@ -438,8 +438,13 @@
       (loop for y from 1 to 20 do
 	(when (= (aref point-count y) 10)
 	  ;;(throw 'found-row (full-row-p (remove-board-row y board)))
-	  (throw 'found-row (mapcar (lambda (piece) (remove-full-row y piece)) board)))))
+	  ;;(throw 'found-row (mapcar (lambda (piece) (remove-full-row y piece)) board))
+	  ;;(full-row-remove ))))
+	  (throw 'found-row (full-row-remove (mapcar (lambda (piece) (remove-full-row y piece)) board))))))
     board))
+
+
+
       
 
 
@@ -448,7 +453,7 @@
 (defun full-row-p(board)
   (catch 'found-row
     (let ((all-points (apply #'append (mapcar (lambda (x) (car (cdr (assoc 'pieces::points x)))) board)))
-	  (point-count (make-array 30)))
+	  (point-count (make-array 30 :initial-element 0)))
       (dolist (point all-points)
 	(destructuring-bind (x y) point
 	  (incf (aref point-count y))))
@@ -457,8 +462,9 @@
 	  (throw 'found-row t))))
     nil))
 
-      
-    
+
+
+
 
 
 ;; down-count is how long to wait when a piece is stuck before recognising as such and generating new piece
@@ -491,10 +497,6 @@
 	   (loop for y from 1 to 20 do
 	     (loop for x from 1 to 10 do
 	       (offset-draw x y))))
-       
-
-       
-       
        
        ;; draw pieces we know about
        (dolist (piece board)
